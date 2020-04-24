@@ -2,18 +2,32 @@ import argparse
 import requests
 from bs4 import BeautifulSoup
 
-month_dict = {1: 'January',
-              2: 'February',
-              3: 'March',
-              4: 'April',
-              5: 'May',
-              6: 'June',
-              7: 'July',
-              8: 'August',
-              9: 'September',
-              10: 'October',
-              11: 'November',
-              12: 'December'}
+
+MONTHS = {1: ('January', 31),
+          2: ('February', 29),
+          3: ('March', 31),
+          4: ('April', 30),
+          5: ('May', 31),
+          6: ('June', 30),
+          7: ('July', 31),
+          8: ('August', 31),
+          9: ('September', 30),
+          10: ('October', 31),
+          11: ('November', 30),
+          12: ('December', 31)}
+
+
+def month_day(month, day):
+    month_day_tuple = MONTHS.get(month, None)
+    if not month_day_tuple:
+        print('Invalid month. Please enter a value between 1 and 12.')
+        exit()
+    elif not 1 <= day <= month_day_tuple[1]:
+        print(
+            f'Invalid day. Enter a value between 1 and {month_day_tuple[1]} for the month of {month_day_tuple[0]}.')
+        exit()
+    else:
+        return f'{month_day_tuple[0]}_{day}'
 
 
 def get_data(soup, search_param):
@@ -23,9 +37,9 @@ def get_data(soup, search_param):
         print(data.text)
 
 
-def find(month, day):
+def find(date):
     response = requests.get(
-        f'https://en.wikipedia.org/wiki/{month}_{day}')
+        f'https://en.wikipedia.org/wiki/{date}')
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # get_data('Events')
@@ -37,10 +51,10 @@ def find(month, day):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--month', type=int, help='month argument')
-    parser.add_argument('-d', '--day', type=str, help='day argument')
+    parser.add_argument('-d', '--day', type=int, help='day argument')
     args = parser.parse_args()
-    month = month_dict[args.month]
-    find(month, args.day)
+    date = month_day(args.month, args.day)
+    find(date)
 
 
 if __name__ == "__main__":
