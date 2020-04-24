@@ -1,6 +1,7 @@
 import argparse
 import requests
 from bs4 import BeautifulSoup
+from datetime import date
 
 
 MONTHS = {1: ('January', 31),
@@ -37,9 +38,9 @@ def get_data(soup, search_param):
         print(data.text)
 
 
-def find(date):
+def find(date_value):
     response = requests.get(
-        f'https://en.wikipedia.org/wiki/{date}')
+        f'https://en.wikipedia.org/wiki/{date_value}')
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # get_data('Events')
@@ -53,8 +54,15 @@ def main():
     parser.add_argument('-m', '--month', type=int, help='month argument')
     parser.add_argument('-d', '--day', type=int, help='day argument')
     args = parser.parse_args()
-    date = month_day(args.month, args.day)
-    find(date)
+    month = args.month
+    day = args.day
+    today = date.today()
+    if not month:
+        month = today.month
+    if not day:
+        day = today.day
+    date_value = month_day(month, day)
+    find(date_value)
 
 
 if __name__ == "__main__":
