@@ -17,12 +17,10 @@ MONTHS = {1: ('January', 31),
           11: ('November', 30),
           12: ('December', 31)}
 
-OCCURRENCES = ('Events', 'Births', 'Deaths', 'Holidays_and_observances')
-
 
 def month_day(month, day):
     month_day_tuple = MONTHS.get(month, None)
-    if not month_day_tuple:
+    if month_day_tuple is None:
         print('Invalid month. Enter a value between 1 and 12.')
         exit()
     elif not 1 <= day <= month_day_tuple[1]:
@@ -33,42 +31,30 @@ def month_day(month, day):
         return f'{month_day_tuple[0]}_{day}'
 
 
-def get_data(soup, search_param):
-    heading = soup.find(id=search_param)
+def find(date_value, occurrence):
+    response = requests.get(
+        f'https://en.wikipedia.org/wiki/{date_value}')
+    soup = BeautifulSoup(response.text, 'html.parser')
+    heading = soup.find(id=occurrence)
     data_list = heading.find_next('ul')
     for data in data_list.find_all('li'):
         print(data.text)
 
 
-def find(date_value, occurrence):
-    response = requests.get(
-        f'https://en.wikipedia.org/wiki/{date_value}')
-    soup = BeautifulSoup(response.text, 'html.parser')
-    get_data(soup, occurrence)
-
-
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--month', type=int, help='month argument')
-    parser.add_argument('-d', '--day', type=int, help='day argument')
-    parser.add_argument('-o', '--occurrence', type=str,
+    parser = argparse.ArgumentParser(prog='What Happened On This Day.',
+                                     description='Find out what happened on a particular day in history.')
+    parser.add_argument('occurrence', nargs='?', default='Holidays_and_observances', type=str,
+                        choices=['Events', 'Births', 'Deaths',
+                                 'Holidays_and_observances'],
                         help='occurrence argument')
+    parser.add_argument('-m', '--month', type=int,
+                        default=date.today().month, help='month argument')
+    parser.add_argument('-d', '--day', type=int,
+                        default=date.today().day, help='day argument')
     args = parser.parse_args()
-    month = args.month
-    day = args.day
-    today = date.today()
-    occurrence = args.occurrence
-    if not month:
-        month = today.month
-    if not day:
-        day = today.day
-    if not occurrence:
-        occurrence = 'Events'
-    if occurrence not in OCCURRENCES:
-        print(f'Invalid occurrence. Enter one among {OCCURRENCES}')
-        exit()
-    date_value = month_day(month, day)
-    find(date_value, occurrence)
+    date_value = month_day(args.month, args.day)
+    find(date_value, args.occurrence)
 
 
 if __name__ == "__main__":
