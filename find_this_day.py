@@ -18,22 +18,9 @@ MONTHS = {1: ('January', 31),
           12: ('December', 31)}
 
 
-def month_day(month, day):
-    month_day_tuple = MONTHS.get(month, None)
-    if month_day_tuple is None:
-        print('Invalid month. Enter a value between 1 and 12.')
-        exit()
-    elif not 1 <= day <= month_day_tuple[1]:
-        print(
-            f'Invalid day. Enter a value between 1 and {month_day_tuple[1]} for the month of {month_day_tuple[0]}.')
-        exit()
-    else:
-        return f'{month_day_tuple[0]}_{day}'
-
-
-def find(date_value, occurrence):
+def find(search_param, occurrence):
     response = requests.get(
-        f'https://en.wikipedia.org/wiki/{date_value}')
+        f'https://en.wikipedia.org/wiki/{search_param}')
     soup = BeautifulSoup(response.text, 'html.parser')
     heading = soup.find(id=occurrence)
     data_list = heading.find_next('ul')
@@ -42,19 +29,24 @@ def find(date_value, occurrence):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='What Happened On This Day.',
-                                     description='Find out what happened on a particular day in history.')
+    parser = argparse.ArgumentParser(prog='What Happened On This Day',
+                                     description='Find out what happened on a particular day in history')
     parser.add_argument('occurrence', nargs='?', default='Holidays_and_observances', type=str,
                         choices=['Events', 'Births', 'Deaths',
                                  'Holidays_and_observances'],
-                        help='occurrence argument')
+                        help='Name of the occurrence')
     parser.add_argument('-m', '--month', type=int,
-                        default=date.today().month, help='month argument')
+                        default=date.today().month, choices=range(1, 13), help='Month to be looked')
     parser.add_argument('-d', '--day', type=int,
-                        default=date.today().day, help='day argument')
+                        default=date.today().day, help='Day to be looked')
     args = parser.parse_args()
-    date_value = month_day(args.month, args.day)
-    find(date_value, args.occurrence)
+    month_day_tuple = MONTHS[args.month]
+    if not 1 <= args.day <= month_day_tuple[1]:
+        parser.error(
+            f"argument -d/--day: invalid choice: {args.day} (choose from {', '.join(map(repr, range(1, month_day_tuple[1]+1)))})")
+    else:
+        search_param = f'{month_day_tuple[0]}_{args.day}'
+    find(search_param, args.occurrence)
 
 
 if __name__ == "__main__":
